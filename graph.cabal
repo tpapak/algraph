@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a5558edc88a05362c22c4a90d3af32d553b6af0c0aa1eddceca71d46d4824166
+-- hash: 3905841e331584f1070fd437eee651855f49e6cc6ce59ee0c6bc61928f9215d7
 
 name:           graph
 version:        0.6.0.2
@@ -62,6 +62,7 @@ test-suite meta-springs-test
       Test.Graph.AdjacencyList.DFS
       Test.Graph.AdjacencyList.Grid
       Test.Graph.AdjacencyList.Metrics
+      Test.Graph.AdjacencyList.PushRelabel.FGLComparison
       Test.Graph.AdjacencyList.PushRelabel.Pure
       Test.Graph.AdjacencyList.WFI
       Paths_graph
@@ -69,7 +70,8 @@ test-suite meta-springs-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Unique
+      QuickCheck >=2.14
+    , Unique
     , ansi-terminal
     , base >=4.7
     , binary >=0.8.6.0
