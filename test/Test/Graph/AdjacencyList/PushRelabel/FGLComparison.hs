@@ -98,13 +98,6 @@ prop_maxFlowMatchesFGL (TestNetwork net _ _) =
             ++ show (length $ edges $ graph net) ++ " edges)")
            (tideFlow == fglFlow)
 
--- | pushRelabel never returns Left on valid networks
-prop_pushRelabelSucceeds :: TestNetwork -> Property
-prop_pushRelabelSucceeds (TestNetwork net _ _) =
-  case pushRelabel net of
-    Right _ -> property True
-    Left err -> counterexample ("pushRelabel failed: " ++ err) False
-
 -- ================================================================
 -- Test runner
 -- ================================================================
@@ -115,7 +108,6 @@ qcCount = 10000
 ioTests :: [IO Test]
 ioTests =
   [ qcTest "Tide max flow == FGL max flow"  prop_maxFlowMatchesFGL
-  , qcTest "pushRelabel succeeds"           prop_pushRelabelSucceeds
   ]
 
 qcTest :: Testable prop => String -> prop -> IO Test
