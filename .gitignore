@@ -1,3 +1,6 @@
 .stack-work/
 *~
 lib/
+scratch/
+stack.yaml.lock
+tags
