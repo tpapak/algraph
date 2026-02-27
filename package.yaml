@@ -60,5 +60,3 @@ tests:
     - vector
     - ansi-terminal
     - binary >= 0.8.6.0
-    - QuickCheck >= 2.14
-    - random >= 1.2

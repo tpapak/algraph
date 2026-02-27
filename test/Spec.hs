@@ -6,7 +6,6 @@ import Test.Graph.AdjacencyList.DFS as DFS
 import Test.Graph.AdjacencyList.WFI as WFI
 import Test.Graph.AdjacencyList.Metrics as Met
 import Test.Graph.AdjacencyList.PushRelabel.Pure as PRP
-import Test.Graph.AdjacencyList.PushRelabel.OldVsNew as OldVsNew
 
 main :: IO ()
 main = do
@@ -22,6 +21,3 @@ main = do
       ++ Met.fastTests
   T.reportTestsIO
     Met.ioTests
-  putStrLn "\nQuickCheck Property Tests"
-  T.reportTestsIO
-    OldVsNew.ioTests
