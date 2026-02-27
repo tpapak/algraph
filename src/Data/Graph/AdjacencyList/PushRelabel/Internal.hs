@@ -38,6 +38,9 @@ module Data.Graph.AdjacencyList.PushRelabel.Internal
   , updateHeight
   , updateExcess
   , updateEdge
+  , resEdgeIndex
+  , edgeCapacity
+  , edgeFlow
   , sourceEdgesCapacity
   , residualDistances
   , stCut
@@ -79,7 +82,11 @@ instance Show ResidualEdge where
       show (fromRational f :: Double)
 type ResidualEdges = IM.IntMap ResidualEdge
 
-type NeighborsMap = IM.IntMap ([Vertex], [Vertex])
+-- | For each vertex, maps forward neighbors and reverse neighbors
+-- to their edge indices in the graph's EdgeMap.
+-- Forward: neighbor -> edgeIndex of (v, neighbor)
+-- Reverse: neighbor -> edgeIndex of (neighbor, v)
+type NeighborsMap = IM.IntMap (IM.IntMap Int, IM.IntMap Int)
 
 -- | Keys are the level (shortest distance from source) and the value is the set
 -- of overflowing vertices
@@ -122,7 +129,14 @@ initializeResidualGraph net =
 getNetNeighborsMap :: Graph -> NeighborsMap
 getNetNeighborsMap g =
   let revgraph = reverseGraph g
-      neis v = (neighbors g v, neighbors revgraph v)
+      neis v = 
+        let fwd = IM.fromList 
+                    [ (n, fromJust $ edgeIndex g (Edge v n)) 
+                    | n <- neighbors g v ]
+            rev = IM.fromList 
+                    [ (n, fromJust $ edgeIndex g (Edge n v)) 
+                    | n <- neighbors revgraph v ]
+         in (fwd, rev)
    in foldl' 
         (\ac v -> IM.insert v (neis v) ac) 
         IM.empty (vertices g)
@@ -130,9 +144,15 @@ getNetNeighborsMap g =
 -- | graph and reverse (inward and outward) neighbors
 netNeighbors :: NeighborsMap 
              -> Vertex 
-             -> ([Vertex], [Vertex]) 
+             -> (IM.IntMap Int, IM.IntMap Int) 
 netNeighbors nm v = 
   fromJust $ IM.lookup v nm
+
+-- | O(log degree) edge index lookup via NeighborsMap
+resEdgeIndex :: NeighborsMap -> Edge -> Maybe Int
+resEdgeIndex nm (Edge u v) = do
+  (fwd, _) <- IM.lookup u nm
+  IM.lookup v fwd
 
 sourceEdges :: Network -> [(Edge,Capacity)]
 sourceEdges net = 
@@ -275,9 +295,8 @@ updateExcess g v nx =
 
 updateEdge :: ResidualGraph -> Edge -> Flow -> ResidualGraph
 updateEdge g e f =
-  let l = graph $ network g
-      es = netEdges g
-      eid = fromJust $ edgeIndex l e
+  let es = netEdges g
+      eid = fromJust $ resEdgeIndex (netNeighborsMap g) e
       (ResidualEdge e' c f') = fromJust $ IM.lookup eid es
    in g { netEdges = IM.adjust (const (ResidualEdge e c f)) eid es
         }
@@ -313,23 +332,23 @@ level rg v =
    in l
 
 edgeCapacity :: ResidualGraph -> Edge -> Capacity
-edgeCapacity g e = let (ResidualEdge ne c f) = fromJust $ IM.lookup (fromJust $ edgeIndex (graph $ network g) e) (netEdges g)
+edgeCapacity g e = let (ResidualEdge ne c f) = fromJust $ IM.lookup (fromJust $ resEdgeIndex (netNeighborsMap g) e) (netEdges g)
                     in c 
 
 edgeFlow :: ResidualGraph -> Edge -> Flow
-edgeFlow g e = let (ResidualEdge ne c f) = fromJust $ IM.lookup (fromJust $ edgeIndex (graph $ network g) e) (netEdges g)
+edgeFlow g e = let (ResidualEdge ne c f) = fromJust $ IM.lookup (fromJust $ resEdgeIndex (netNeighborsMap g) e) (netEdges g)
                 in f 
 
 inflow :: ResidualGraph -> Vertex -> Flow
 inflow g v =
-  let ns  = netNeighbors (netNeighborsMap g) v 
-      reds = map (\n -> fromTuple (n,v)) $ snd ns
+  let (_, revMap) = netNeighbors (netNeighborsMap g) v 
+      reds = map (\n -> fromTuple (n,v)) $ IM.keys revMap
    in foldl' (\ac e -> (ac + edgeFlow g e)) 0 reds 
 
 outflow :: ResidualGraph -> Vertex -> Flow
 outflow g v =
-  let ns  = netNeighbors (netNeighborsMap g) v 
-      reds = map (\n -> fromTuple (v,n)) $ fst ns
+  let (fwdMap, _) = netNeighbors (netNeighborsMap g) v 
+      reds = map (\n -> fromTuple (v,n)) $ IM.keys fwdMap
    in foldl' (\ac e -> (ac + edgeFlow g e)) 0 reds 
 
 -- | Update flow of network from the residual edges' preflow

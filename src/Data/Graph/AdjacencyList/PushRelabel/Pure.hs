@@ -154,8 +154,8 @@ globalPull rg =
 pushNeighbors :: ResidualGraph -> Vertex -> ResidualGraph
 pushNeighbors g v =
   let neimap = netNeighborsMap g
-      (fns, rns) = fromJust $ IM.lookup v neimap
-      feds = map (\n -> fromTuple (v,n)) fns
+      (fwdMap, _) = fromJust $ IM.lookup v neimap
+      feds = map (\n -> fromTuple (v,n)) $ IM.keys fwdMap
    in foldl' (\ac e -> 
                 let mv = push ac e
                 in case mv of 
@@ -166,8 +166,8 @@ pushNeighbors g v =
 pullNeighbors :: ResidualGraph -> Vertex -> ResidualGraph
 pullNeighbors g v =
   let neimap = netNeighborsMap g
-      (fns, rns) = fromJust $ IM.lookup v neimap
-      reds = map (\n -> fromTuple (n,v)) rns
+      (_, revMap) = fromJust $ IM.lookup v neimap
+      reds = map (\n -> fromTuple (n,v)) $ IM.keys revMap
    in foldl' (\ac e -> 
                 let mv = pull ac e
                  in case mv of 

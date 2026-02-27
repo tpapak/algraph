@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a5558edc88a05362c22c4a90d3af32d553b6af0c0aa1eddceca71d46d4824166
+-- hash: e0a38a7d2fed1dec6f3c6509be446900666e9da9a4cda78d7aa7396eccdf5547
 
 name:           graph
 version:        0.6.0.2
@@ -37,6 +37,7 @@ library
       Data.Graph.AdjacencyList.Network
       Data.Graph.AdjacencyList.PushRelabel.Internal
       Data.Graph.AdjacencyList.PushRelabel.Pure
+      Data.Graph.AdjacencyList.PushRelabel.PureOld
       Data.Graph.AdjacencyList.PushRelabel.STM
       Data.Graph.AdjacencyList.WFI
   other-modules:
@@ -62,6 +63,7 @@ test-suite meta-springs-test
       Test.Graph.AdjacencyList.DFS
       Test.Graph.AdjacencyList.Grid
       Test.Graph.AdjacencyList.Metrics
+      Test.Graph.AdjacencyList.PushRelabel.OldVsNew
       Test.Graph.AdjacencyList.PushRelabel.Pure
       Test.Graph.AdjacencyList.WFI
       Paths_graph
@@ -69,13 +71,15 @@ test-suite meta-springs-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      Unique
+      QuickCheck >=2.14
+    , Unique
     , ansi-terminal
     , base >=4.7
     , binary >=0.8.6.0
     , containers >=0.5.10.2
     , fgl >=5.5.3.1
     , graph
+    , random >=1.2
     , tesths >=0.2.2.1
     , vector
   default-language: Haskell2010
