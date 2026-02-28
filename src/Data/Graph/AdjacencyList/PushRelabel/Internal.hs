@@ -555,7 +555,7 @@ residualDistances rg =
       sfsatnbs = foldl' (\ac (ResidualEdge e c f) -> 
         let u = from e
             v = to e 
-            mns = IM.lookup v ac 
+            mns = IM.lookup u ac 
          in case mns of 
                Nothing -> IM.insert u [v] ac
                Just ns -> IM.insert u (v:ns) ac
