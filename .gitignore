@@ -4,3 +4,6 @@ lib/
 scratch/
 stack.yaml.lock
 tags
+*.hi
+*.o
+.DS_Store
