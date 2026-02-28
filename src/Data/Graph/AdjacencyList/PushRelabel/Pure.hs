@@ -253,13 +253,24 @@ globalRelabel :: ResidualGraph -> ResidualGraph
 globalRelabel rg =
   let g = graph $ network rg
       sh = numVertices g
+      s = source $ network rg
+      t = sink $ network rg
       (slvs, tlvs) = residualDistances rg
+      -- Vertices not reached by either BFS get height 2*|V| so their
+      -- excess drains back to the source via pull operations.
+      allVs = Set.fromList (vertices g)
+      reachedS = Set.fromList (IM.keys slvs)
+      reachedT = Set.fromList (IM.keys tlvs)
+      reached = Set.union reachedS reachedT
+      unreached = Set.difference allVs reached
+      deadHeight = 2 * sh
+      rg0 = Set.foldl' (\ac v -> updateHeight ac v deadHeight) rg unreached
       rg' = IM.foldrWithKey 
               (\ v l ac -> 
                  -- Heights for the source partition vertices is N + their distance to the source
                 let h = sh + l 
                   in updateHeight ac v h
-              ) rg slvs 
+              ) rg0 slvs 
    in IM.foldrWithKey (\ v h ac
        -- Heights for the sink partition vertices equals the distance from sink
        -> updateHeight ac v h) 
