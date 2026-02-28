@@ -105,6 +105,8 @@ pushRelabel net =
 -- | The main part of the algorithm. It is a recursive algorithm consisting of a
 -- global relabel, followed by a global push and then a global pull. When the
 -- flow and the overflowing vertices don't change max flow is achieved.
+-- Optimization: skip globalRelabel when the residual graph topology did not
+-- change in the previous tide (no edge crossed a saturation boundary).
 tide :: ResidualGraph -> Int -> ResidualGraph 
 tide rg steps = 
   let g = rg `seq` (graph $ network rg)
@@ -113,8 +115,13 @@ tide rg steps =
       es = edges g
       vs = vertices g
       olf = netFlow rg
-      bfsrg = globalRelabel rg -- first do global relabel
-      rg' = globalPush $ globalPull bfsrg -- then global push and then global pull
+      -- Only run globalRelabel if the residual topology changed
+      relabeled = if topologyChanged rg
+                  then globalRelabel rg
+                  else rg
+      -- Reset flag before push/pull so we detect new changes
+      rg0 = relabeled { topologyChanged = False }
+      rg' = globalPush $ globalPull rg0 -- then global push and then global pull
       nfl = netFlow rg'
       steps' = steps + 1
       oovfls = overflowing rg

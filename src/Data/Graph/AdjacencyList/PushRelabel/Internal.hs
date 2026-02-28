@@ -99,6 +99,7 @@ data ResidualGraph =
                 , netNeighborsMap :: !NeighborsMap 
                 , overflowing :: !Overflowing -- ^ Set of overflowing vertices
                 , steps :: !Int
+                , topologyChanged :: !Bool -- ^ Whether any edge crossed a saturation boundary
                 }
    deriving (Show,Eq)
 
@@ -124,7 +125,8 @@ initializeResidualGraph net =
                                IM.adjust (\ps -> Set.insert v ps) (fl v) ac
                             ) (IM.fromList (zip [1..maxLevel] (repeat Set.empty))) ovfs
                     , steps = 0
-                    } 
+                     , topologyChanged = True -- ^ First tide must always run globalRelabel
+                     } 
 
 getNetNeighborsMap :: Graph -> NeighborsMap
 getNetNeighborsMap g =
@@ -298,7 +300,16 @@ updateEdge g e f =
   let es = netEdges g
       eid = fromJust $ resEdgeIndex (netNeighborsMap g) e
       (ResidualEdge e' c f') = fromJust $ IM.lookup eid es
+      -- Detect if edge crossed a saturation boundary:
+      -- forward edge exists iff flow < capacity
+      -- backward edge exists iff flow > 0
+      !fwdBefore = f' < c
+      !fwdAfter  = f < c
+      !bwdBefore = f' > 0
+      !bwdAfter  = f > 0
+      !changed   = (fwdBefore /= fwdAfter) || (bwdBefore /= bwdAfter)
    in g { netEdges = IM.adjust (const (ResidualEdge e c f)) eid es
+        , topologyChanged = topologyChanged g || changed
         }
 
 netFlow :: ResidualGraph -> Flow
