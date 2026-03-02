@@ -1,18 +1,19 @@
 {-|
-Module      : Grid
-Description : d-dimentional cubic lattices
-
-Copyright   : Thodoris Papakonstantinou, 2016
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Module      : Data.Graph.AdjacencyList.Grid
+Description : d-dimensional cubic lattices with periodic boundary conditions
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
-Functions defining d-dimentional cubic lattices by giving adjacent vertices and edges of vertex
-following conventional vertex labeling.
+Generators for d-dimensional cubic lattices with periodic boundary conditions
+(toroidal topology).  A 'PBCSquareLattice' @L D@ is the Cartesian product of
+@D@ cycle graphs of length @L@: \( C_L \square^D \).
 
-- L: linear size
-- d: dimensionality (2: square, 3: cubic, >3: hypercubic)
+Provides both directed ('graphCubicPBC', forward edges only) and undirected
+('undirectedGraphCubicPBC', forward + backward edges) variants, plus coordinate
+conversion between flat vertex IDs and Cartesian coordinates.
  -}
 
 module Data.Graph.AdjacencyList.Grid
@@ -41,7 +42,10 @@ import Numeric.Natural
 
 import Data.Graph.AdjacencyList
 
+-- | Linear size of the lattice (number of vertices per dimension).
 type L = Natural
+
+-- | Dimensionality of the lattice (2 = square, 3 = cubic, etc.).
 type D = Natural
 
 type CVertex = [Vertex] -- ^ Representation of a Lattice Vertex as Cartesian graph product
@@ -62,6 +66,8 @@ instance Show PBCSquareLattice where
                     " numVertices : " ++ show (gridN l d) ++ "\n" ++
                       " numEdges : " ++ show (gridNumEdges (PBCSquareLattice l d))
 
+-- | Undirected graph on a PBC cubic lattice (both forward and backward edges).
+-- Contains @2 * D * L^D@ directed edges (two per neighbor pair).
 undirectedGraphCubicPBC :: PBCSquareLattice -> Graph
 undirectedGraphCubicPBC (PBCSquareLattice l d) = 
   let vs = gridVertices l d
@@ -75,11 +81,14 @@ graphCubicPBC (PBCSquareLattice l d) =
       neis = pbcDirectedNeighbors l d
    in createGraph vs neis
 
+-- | Number of directed (forward) edges in the lattice: @D * L^D@.
+gridNumEdges :: PBCSquareLattice -> Natural
 gridNumEdges (PBCSquareLattice l d) = d * (gridN l d)
 
 gridN :: L -> D -> Natural
 gridN l d = l ^ d
 
+-- | Total number of vertices in the lattice: @L^D@.
 gridSize :: PBCSquareLattice -> Natural
 gridSize (PBCSquareLattice l d) =  gridN l d
 

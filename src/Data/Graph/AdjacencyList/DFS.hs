@@ -1,13 +1,15 @@
 {-|
-Module      : DFS
-Description : Depth first search graph traversal
-Copyright   : Thodoris Papakonstantinou, 2018
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Module      : Data.Graph.AdjacencyList.DFS
+Description : Depth-first search with topological sort and longest path
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
-
+Depth-first search (DFS) on directed graphs.  Produces a topological ordering,
+a visited-order list, and the set of discovered vertices.  Also provides
+'longestPath' on DAGs and connectivity queries.
  -}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -33,10 +35,15 @@ import qualified Data.Sequence as Seq
 
 import Data.Graph.AdjacencyList
 
+-- | Result of a depth-first search from a single source vertex.
 data DFS = DFS { topsort :: [Vertex]
+                 -- ^ Vertices in reverse post-order (topological sort for DAGs).
                , visited :: [Vertex]
+                 -- ^ Vertices in DFS visit order.
                , discovered   :: Set.IntSet
+                 -- ^ Set of all discovered vertices.
                , called :: Int
+                 -- ^ Number of DFS calls made.
                } deriving (Eq, Show)
 
 initialDFS :: DFS
@@ -49,26 +56,31 @@ initialDFS = DFS { topsort = []
 -- | Depth first search
 dfs :: Graph -> Vertex -> DFS
 dfs g s = 
-  if not $ elem s (vertices g) 
+  let vset = Set.fromList (vertices g)
+  in if not $ Set.member s vset
      then initialDFS
      else
-       let sbfs = initialDFS
-           depthFirstSearch :: Vertex -> DFS -> DFS
-           depthFirstSearch v ac =
-              let ns = neighbors g v
+       let depthFirstSearch :: Vertex -> DFS -> DFS
+           depthFirstSearch v ac
+              | Set.member v (discovered ac) = ac
+              | otherwise =
+              let -- Mark v as discovered BEFORE recursing (prevents revisits in cyclic graphs)
+                  ac0 = ac { discovered = Set.insert v (discovered ac) }
+                  ns = neighbors g v
                   !ac' = foldl' (\ac'' n -> if not (Set.member n (discovered ac''))
                                               then depthFirstSearch n ac''
                                               else ac''
-                                ) ac ns
-                  newpostord = v: (topsort ac')
-                  res = ac' { discovered = Set.insert v (discovered ac')
-                            , topsort = newpostord
-                            , visited = (visited ac') ++ [v]
+                                ) ac0 ns
+                  res = ac' { topsort = v : topsort ac'
+                            -- Prepend to visited (reversed at end)
+                            , visited = v : visited ac'
                             , called = called ac' + 1
                             }
                in res
-        in depthFirstSearch s sbfs
+           result = depthFirstSearch s initialDFS
+        in result { visited = reverse (visited result) }
 
+-- | Post-order traversal (reverse of 'topsort').
 postordering :: DFS -> [Vertex]
 postordering = reverse . topsort
 
@@ -120,6 +132,8 @@ type TopologicalSorting = [Vertex]
 dependsOn :: TopologicalSorting -> Vertex -> Vertex -> Bool
 dependsOn topsorted t s = elem t (snd (span ((==) s) topsorted))
 
+-- | Check whether vertex @v@ is reachable from vertex @u@ according to the
+-- given distance map (distance > 0 means reachable; @u@ is reachable from itself).
 areConnected :: Distances -> Vertex -> Vertex -> Bool
 areConnected dists u v = (fromJust $ IM.lookup v dists) > 0 || v == u
 

@@ -1,9 +1,9 @@
 {-|
 Module      : Data.Graph.AdjacencyList.PushRelabel.Internal
 Description : Residual graph types and primitive operations for the Tide algorithm
-Copyright   : Thodoris Papakonstantinou, 2017
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
@@ -23,7 +23,7 @@ This module defines:
 
 The 'topologyChanged' flag tracks whether any edge crossed a saturation
 boundary (became saturated or unsaturated) during push\/pull.  When the
-flag is 'False', the next tide can skip 'globalRelabel' — an optimization
+flag is 'False', the next tide can skip @globalRelabel@ — an optimization
 that yields 1.25--1.61x speedup in practice.
  -}
 
@@ -71,7 +71,7 @@ module Data.Graph.AdjacencyList.PushRelabel.Internal
   , getOverflowing
     -- * Network reconstruction
   , networkFromResidual
-    -- * Residual BFS (for globalRelabel)
+    -- * Residual BFS (for @globalRelabel@)
   , residualDistances
     -- * Min-cut
   , stCut
@@ -108,7 +108,7 @@ type Level = Int
 --
 -- * @v@ — vertex identifier
 -- * @l@ — level (BFS distance from source in original graph, constant)
--- * @h@ — height (updated by globalRelabel each tide)
+-- * @h@ — height (updated by @globalRelabel@ each tide)
 -- * @x@ — excess flow (updated by push\/pull operations)
 data ResidualVertex = ResidualVertex !Vertex !Level !Height !Excess
   deriving (Eq)
@@ -179,7 +179,7 @@ data ResidualGraph =
                   -- ^ Whether any edge crossed a saturation boundary
                   -- (became saturated or unsaturated) during the
                   -- most recent push\/pull phase.  When 'False',
-                  -- the next tide can skip 'globalRelabel'.
+                  -- the next tide can skip @globalRelabel@.
                 }
    deriving (Show,Eq)
 
@@ -190,7 +190,7 @@ data ResidualGraph =
 -- overflowing set with all vertices that received flow from the source.
 --
 -- The 'topologyChanged' flag is set to 'True' so the first tide always
--- runs 'globalRelabel'.
+-- runs @globalRelabel@.
 initializeResidualGraph :: Network -> ResidualGraph
 initializeResidualGraph net = 
   let vs = initializeVertices net
@@ -526,7 +526,7 @@ networkFromResidual resg =
 --   (traversing edges with residual capacity > 0 forward, and edges
 --   with flow > 0 in reverse)
 --
--- Used by 'globalRelabel' to set vertex heights:
+-- Used by @globalRelabel@ to set vertex heights:
 -- source-side vertices get @height = |V| + dist_from_source@,
 -- sink-side vertices get @height = dist_from_sink@.
 residualDistances :: ResidualGraph -> (IM.IntMap Int, IM.IntMap Int)

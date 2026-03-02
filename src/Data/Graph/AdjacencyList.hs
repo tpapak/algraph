@@ -1,17 +1,18 @@
 {-|
-Module      : Data.AdjacencyList.Graph
-Description : Class definitions of the Graph
-
-Copyright   : Thodoris Papakonstantinou, 2016
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Module      : Data.Graph.AdjacencyList
+Description : Core graph types and constructors
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
-Basic definitions of a graph as an adjacency list.
-The graph is represented as the function that outputs 
-a list of the adjacent vertices of a given vertex,
-which is the function equivalent of the adjacency list.
+Core types and constructors for directed graphs using adjacency list
+representation.
+
+A 'Graph' stores its vertex set, an 'EdgeMap' for edge-attribute lookup,
+and a closure-based 'Neighbors' function for O(log V) neighbor access.
+Undirected graphs are represented by including both directions of each edge.
  -}
 
 {-# LANGUAGE DeriveGeneric #-}  
@@ -61,8 +62,10 @@ import qualified Data.Set as Set
 import qualified GHC.Generics as Gen
 import qualified Data.Binary as Bin
 
+-- | A vertex identifier (non-negative integer).
 type Vertex = Int
 
+-- | A directed edge from one vertex to another.
 data Edge = Edge Vertex Vertex 
   deriving (Ord, Gen.Generic)
 instance Bin.Binary Edge
@@ -73,6 +76,8 @@ instance Show Edge where
 instance Eq Edge where
   a == b = from a == from b && to a == to b
 
+-- | Map from edges to their sequential index (1-based).
+-- Used for edge-attribute lookup.
 type EdgeMap = M.Map Edge Int
 
 -- | Takes vertex and outputs neighboring vertices.
@@ -89,6 +94,7 @@ data Graph =
         , neighbors :: Neighbors -- ^ The `Adjacency List`
         }
 
+-- | Check whether an edge exists in the graph.
 edgeExists :: Graph -> Edge -> Bool
 edgeExists g e = M.member e (edgeMap g)
 
@@ -96,6 +102,7 @@ edgeExists g e = M.member e (edgeMap g)
 edgeIndex :: Graph -> Edge -> Maybe Int
 edgeIndex g e = M.lookup e $ edgeMap g
 
+-- | All edges of the graph, in 'EdgeMap' key order.
 edges :: Graph -> [Edge]
 edges g = 
   fmap fst $ M.toList $ edgeMap g
@@ -104,26 +111,35 @@ edgeMapFromEdges :: [Edge] -> EdgeMap
 edgeMapFromEdges es =
   M.fromList $ zip es [1..]
 
+-- | Source vertex of an edge.
 from :: Edge -> Vertex
 from (Edge s t) = s
 
+-- | Target vertex of an edge.
 to :: Edge -> Vertex
 to (Edge s t) = t
 
+-- | Construct an 'Edge' from a @(source, target)@ tuple.
 fromTuple :: (Vertex, Vertex) -> Edge
 fromTuple (s,t) = Edge s t
 
+-- | Convert an 'Edge' to a @(source, target)@ tuple.
 toTuple :: Edge -> (Vertex, Vertex)
 toTuple (Edge s t) = (s,t)
 
+-- | Reverse the direction of an edge.
 reverseEdge :: Edge -> Edge
 reverseEdge (Edge s t) = Edge t s
 
+-- | All edges of the graph with reversed direction.
 reverseEdges :: Graph -> [Edge]
 reverseEdges g = fmap reverseEdge $ edges g
 
+-- | Number of vertices in the graph.
 numVertices :: Graph -> Int
 numVertices g = length $ vertices g
+
+-- | Number of edges in the graph.
 numEdges :: Graph -> Int
 numEdges g = length $ edges g
 
@@ -145,32 +161,27 @@ createGraph vs neis =
             , edgeMap = emap
             }
 
--- | Graph constructor given a list of edges
+-- | Graph constructor given a list of edges.
+--
+-- Builds the adjacency map in a single O(E) pass using 'IM.fromListWith',
+-- then wraps it in a closure for O(log V) neighbor lookup.
 graphFromEdges :: [Edge] -> Graph
 graphFromEdges es = 
   let vs = Set.toList $ foldl' (\ac (Edge u v) ->
              Set.insert u (Set.insert v ac)) Set.empty es
       esmap = edgeMapFromEdges es
-      neimap = IM.fromList 
-                  $ fmap 
-                    (\v -> 
-                      let nes = fmap to 
-                                $ M.keys 
-                                  $ M.filterWithKey 
-                                    (\e _ -> from e == v) 
-                                    esmap
-                       in (v, nes))
-                    vs
-      neis = (\v -> 
-                 let mns = IM.lookup v neimap
-                  in case mns of
-                       Nothing -> []
-                       Just ns -> ns)
+      -- Build adjacency map in one pass: O(E log V) via fromListWith
+      neimap = IM.fromListWith (++)
+                  $ fmap (\(Edge u v) -> (u, [v])) es
+      neis v = case IM.lookup v neimap of
+                 Nothing -> []
+                 Just ns -> ns
    in Graph { vertices = vs
             , edgeMap = esmap
             , neighbors = neis
             }
 
+-- | Enumerate all edges implied by a 'Neighbors' function over a vertex set.
 edgesFromNeighbors :: Neighbors -> [Vertex] -> [Edge]
 edgesFromNeighbors neis vs = 
   let allneis = fmap (\v -> (v,neis v)) vs
@@ -178,13 +189,16 @@ edgesFromNeighbors neis vs =
              (fmap (\n -> Edge v n) nv) ++ ac
              ) [] allneis
 
+-- | All outgoing edges from a vertex.
 adjacentEdges :: Graph -> Vertex -> [Edge]
 adjacentEdges g v = fmap (\n -> Edge v n) $ neighbors g v
 
+-- | Build an explicit adjacency map from the graph's 'Neighbors' closure.
 adjacencyMap :: Graph -> IM.IntMap [Vertex]
 adjacencyMap g = IM.fromList $ fmap (\v -> (v, (neighbors g v))) vs
                  where vs = vertices g
 
+-- | Reverse all edges in the graph.
 reverseGraph :: Graph -> Graph
 reverseGraph g =
   graphFromEdges $ reverseEdges g

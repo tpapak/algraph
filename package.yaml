@@ -1,10 +1,10 @@
-name:                graph
-version:             0.6.0.2
-github:              "tosku/graph"
-license:             GPL-3
+name:                algraph
+version:             0.7.0.0
+github:              "tpapak/algraph"
+license:             LGPL-3
 author:              "Thodoris Papakonstantinou"
-maintainer:          "hi@tpapak.com"
-copyright:           "Thodoris Papakonstantinou, 2025"
+maintainer:          "dev@tpapak.com"
+copyright:           "Thodoris Papakonstantinou, 2017-2026"
 
 extra-source-files:
 - README.md
@@ -17,7 +17,7 @@ category:            Graph theory
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/tosku/graph#readme>
+description:         Please see the README on GitHub at <https://github.com/tpapak/algraph#readme>
 
 dependencies:
 - base >= 4.8
@@ -43,7 +43,7 @@ library:
                      #, Data.Graph.AdjacencyList.PushRelabel.Pure
 
 tests:
-  meta-springs-test:
+  algraph-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -53,7 +53,7 @@ tests:
     dependencies:
     - base >=4.7
     - tesths >= 0.2.2.1
-    - graph
+    - algraph
     - Unique
     - fgl >= 5.5.3.1
     - containers >= 0.5.10.2

@@ -1,9 +1,9 @@
 {-|
 Module      : Data.Graph.AdjacencyList.PushRelabel.Pure
 Description : Tide algorithm — a push-pull-relabel max-flow solver
-Copyright   : Thodoris Papakonstantinou, 2017
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 

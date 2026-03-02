@@ -1,9 +1,9 @@
 {-|
 Module      : Data.Graph.AdjacencyList.BFS
 Description : Breadth-first search on adjacency-list graphs
-Copyright   : Thodoris Papakonstantinou, 2017
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
@@ -76,35 +76,38 @@ initialBFS s = BFS { frontier = Set.singleton s
 -- If @s@ is not in the graph's vertex set, returns the initial (empty) BFS.
 bfs :: Graph -> Vertex -> BFS
 bfs g s = 
-  let sbfs = initialBFS s
+  let vset = Set.fromList (vertices g)
+      sbfs = initialBFS s
       breadthFirstSearch b =
-        if Set.empty == frontier b || not (elem s (vertices g))
-           then b
+        if Set.null (frontier b) || not (Set.member s vset)
+           then b { topSort = reverse (topSort b) }
            else
              let oldLevel = maxLevel b
                  newLevel = oldLevel + 1
                  oldLevels = level b
                  oldFrontiers = frontier b
-                 frontPar = 
-                    let toCheck = 
-                          Set.foldr 
-                            (\v ac-> ac ++ (zip (neighbors g v) (repeat v))) 
-                            [] oldFrontiers
-                     in filter (\(n,p) -> not $ IM.member n oldLevels) toCheck
-                 newFrontiers = Set.fromList $ map fst frontPar
-                 oldParents = parent b
-                 newParents = foldl' 
-                            (\ac (n,p) -> IM.insert n p ac) 
-                            oldParents frontPar
+                 -- Collect (neighbor, parent) pairs; use IntMap to deduplicate
+                 -- and keep only newly discovered vertices in one pass
+                 newParMap = Set.foldl'
+                   (\acc v ->
+                     foldl' (\acc' n ->
+                       if IM.member n oldLevels || IM.member n acc'
+                         then acc'
+                         else IM.insert n v acc'
+                     ) acc (neighbors g v)
+                   ) IM.empty oldFrontiers
+                 newFrontiers = IM.keysSet newParMap
+                 newParents = IM.union (parent b) newParMap
                  newLevels = Set.foldl' 
                            (\ac v -> IM.insert v newLevel ac) 
                            oldLevels newFrontiers
+                 -- Prepend frontier to topSort (reversed at the end)
+                 newTopSort = Set.foldl' (flip (:)) (topSort b) oldFrontiers
                  bbfs = breadthFirstSearch (b { frontier = newFrontiers
                                               , level = newLevels 
                                               , parent = newParents
                                               , maxLevel = newLevel
-                                              , topSort = (topSort b) 
-                                              ++ Set.toList oldFrontiers
+                                              , topSort = newTopSort
                                             })
                in bbfs
    in breadthFirstSearch sbfs
@@ -119,37 +122,39 @@ bfs g s =
 -- to run BFS on the residual graph (whose edge set changes each tide)
 -- without constructing a full 'Graph' value.
 adjBFS :: IM.IntMap [Vertex] -> Vertex -> BFS
-adjBFS neimap s = breadthFirstSearch sbfs
+adjBFS neimap s = let b = breadthFirstSearch sbfs
+                  in b { topSort = reverse (topSort b) }
   where neighbors v = case IM.lookup v neimap of
                         Nothing -> []
                         Just ns -> ns
         sbfs = initialBFS s
         breadthFirstSearch b
-          | Set.empty == frontier b = b
+          | Set.null (frontier b) = b
           | otherwise = bbfs
             where oldLevel = maxLevel b
                   newLevel = oldLevel + 1
                   oldLevels = level b
                   oldFrontiers = frontier b
-                  frontPar = 
-                    let toCheck = 
-                          Set.foldr 
-                            (\v ac-> ac ++ (zip (neighbors v) (repeat v))) 
-                            [] oldFrontiers
-                     in filter (\(n,p) -> not $ IM.member n oldLevels) toCheck
-                  newFrontiers = Set.fromList $ map fst frontPar
-                  oldParents = parent b
-                  newParents = foldl' 
-                                 (\ac (n,p) -> IM.insert n p ac) 
-                                 oldParents frontPar
+                  -- Collect new vertices; use IntMap to deduplicate
+                  newParMap = Set.foldl'
+                    (\acc v ->
+                      foldl' (\acc' n ->
+                        if IM.member n oldLevels || IM.member n acc'
+                          then acc'
+                          else IM.insert n v acc'
+                      ) acc (neighbors v)
+                    ) IM.empty oldFrontiers
+                  newFrontiers = IM.keysSet newParMap
+                  newParents = IM.union (parent b) newParMap
                   newLevels = Set.foldl' 
                                  (\ac v -> IM.insert v newLevel ac) 
                                  oldLevels newFrontiers
+                  newTopSort = Set.foldl' (flip (:)) (topSort b) oldFrontiers
                   bbfs = breadthFirstSearch (b { frontier = newFrontiers
                              , level = newLevels 
                              , parent = newParents
                              , maxLevel = newLevel
-                             , topSort = (topSort b) ++ Set.toList oldFrontiers
+                             , topSort = newTopSort
                              })
 
 -- | Extract the BFS spanning tree as a list of edges.

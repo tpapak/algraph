@@ -1,14 +1,16 @@
 {-|
-Module      : FWI
-Description : Implementation of the Floyd–Warshall algorithm 
-              for finding all shortest paths
-Copyright   : Thodoris Papakonstantinou, 2018
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Module      : Data.Graph.AdjacencyList.WFI
+Description : Floyd-Warshall all-pairs shortest paths
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
-[Wikipedia link for detailed description](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm)
+Implementation of the
+<https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm Floyd-Warshall algorithm>
+for computing all-pairs shortest path distances on a weighted or unweighted
+directed graph.  Complexity: O(V^3).
  -}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -49,6 +51,9 @@ shortestDistance dists u v = do
   vmap <- IM.lookup u dists
   IM.lookup v vmap
 
+-- | Build the initial distance matrix from a graph's edges (unit weights).
+-- Self-distances are 0; direct edges have distance 1; all others are absent
+-- (infinite).  Pass the result to 'shortestDistances' to run Floyd-Warshall.
 adjacencyArray :: Graph -> Distances
 adjacencyArray g =
   let es = edges g

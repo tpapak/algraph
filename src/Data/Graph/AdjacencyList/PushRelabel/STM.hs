@@ -1,9 +1,9 @@
 {-|
 Module      : PushRelabel - STM
 Description : Maximum Flow - Min Cut - Push relabel algorithm with concurrency
-Copyright   : Thodoris Papakonstantinou, 2017
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 

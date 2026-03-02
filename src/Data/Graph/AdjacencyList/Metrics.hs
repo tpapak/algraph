@@ -1,13 +1,15 @@
 {-|
-Module      : Metrics
-Description : Various distance and density metrics for graphs
-Copyright   : Thodoris Papakonstantinou, 2018
-License     : GPL-3
-Maintainer  : mail@tpapak.com
+Module      : Data.Graph.AdjacencyList.Metrics
+Description : Graph distance and density metrics
+Copyright   : Thodoris Papakonstantinou, 2017-2026
+License     : LGPL-3
+Maintainer  : dev@tpapak.com
 Stability   : experimental
 Portability : POSIX
 
-[Wikipedia link for detailed description](https://en.wikipedia.org/wiki/Distance_(graph_theory))
+Graph metrics computed from a 'Distances' matrix (see "Data.Graph.AdjacencyList.WFI"):
+<https://en.wikipedia.org/wiki/Distance_(graph_theory) eccentricity>,
+radius, diameter, and density.
  -}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
@@ -28,11 +30,16 @@ import qualified Data.IntMap   as IM
 import Data.Graph.AdjacencyList
 import Data.Graph.AdjacencyList.WFI
 
+-- | Eccentricity of a vertex: the maximum shortest-path distance from @v@
+-- to any other reachable vertex.  Returns 'Nothing' if @v@ is not in the
+-- distance matrix.
 graphEccentricity :: Vertex -> Distances -> Maybe Weight
 graphEccentricity v (Distances dis) =
   let vdis = IM.lookup v dis
    in maximum <$> vdis
 
+-- | Radius of the graph: the minimum eccentricity over all vertices
+-- (excluding zero and absent eccentricities).
 graphRadius :: Distances -> Maybe Weight
 graphRadius dis =
   let (Distances dism) = dis
@@ -43,6 +50,7 @@ graphRadius dis =
          then Nothing
          else minimum filtdis
 
+-- | Diameter of the graph: the maximum eccentricity over all vertices.
 graphDiameter :: Distances -> Maybe Weight
 graphDiameter dis =
   let (Distances dism) = dis
