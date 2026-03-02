@@ -111,17 +111,31 @@ DIMACS graph instances.
 Key differences from fgl:
 
 - **Faster max flow** — Tide is asymptotically better than fgl's Edmonds-Karp
-  at all graph densities
+  at all graph densities (O(V(V+E) log V) vs O(VE^2))
 - **Exact arithmetic** — fgl uses `Double` for max flow; algraph uses
-  `Rational`
+  `Rational`, guaranteeing correct results for arbitrary capacity values
 - **Faster traversals** — algraph's BFS/DFS are O((V+E) log V) vs fgl's
-  O(V^2) due to fgl's O(V)-per-vertex `match` decomposition. At 1M vertices,
-  algraph BFS is 3.5x faster
+  O(V^2) due to fgl's O(V)-per-vertex `match` decomposition
 - **APSP** — Floyd-Warshall is built in; fgl only offers single-source
   algorithms
 
 fgl has broader algorithm coverage (SCC, dominators, MST, Dijkstra,
 transitive closure) and supports labeled nodes/edges.
+
+### BFS performance vs fgl
+
+fgl's BFS uses `match` at each vertex, making it O(V^2) instead of the
+textbook O(V+E). algraph's BFS is O((V+E) log V) using IntMap/IntSet. The
+gap widens with graph size:
+
+| Graph | V | E | algraph | fgl | fgl/algraph |
+|---|---|---|---|---|---|
+| Grid 100x100 | 10K | 20K | 51 ms | 53 ms | 1.0x |
+| Grid 200x200 | 40K | 80K | 258 ms | 337 ms | 1.3x |
+| Grid 500x500 | 250K | 500K | 1675 ms | 2848 ms | **1.7x** |
+| Grid 1000x1000 | 1M | 2M | 6956 ms | 24316 ms | **3.5x** |
+| Layered 20x50 | 1K | 48K | 60 ms | 296 ms | **5.0x** |
+| Layered 50x100 | 5K | 490K | 695 ms | 1487 ms | **2.1x** |
 
 ## Building
 
