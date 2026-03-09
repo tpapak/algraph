@@ -9,3 +9,4 @@ tags
 *.hi
 *.o
 .DS_Store
+cabal.project
