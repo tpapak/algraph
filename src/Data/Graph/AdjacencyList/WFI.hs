@@ -20,6 +20,7 @@ directed graph.  Complexity: O(V^3).
 module Data.Graph.AdjacencyList.WFI
   ( Distances (..)
   , Weight
+  , IMArray
   , shortestDistances
   , unweightedShortestDistances
   , adjacencyArray
@@ -35,6 +36,7 @@ import Data.Graph.AdjacencyList
 -- | In an unweighted graph the weight is 1 for each edge
 type Weight = Rational
 
+-- | Two-dimensional distance matrix: vertex → vertex → 'Weight'.
 type IMArray = IM.IntMap (IM.IntMap Weight)
 -- | The array containing the distances from vertex to vertex
 newtype Distances = Distances IMArray

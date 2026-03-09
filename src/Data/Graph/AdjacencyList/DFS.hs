@@ -20,6 +20,9 @@ a visited-order list, and the set of discovered vertices.  Also provides
 module Data.Graph.AdjacencyList.DFS
   ( DFS (..)
   , dfs
+  -- * Types
+  , DAG
+  , Distances
   -- * get longest path from a vertex to another
   , longestPath
   , postordering
@@ -106,6 +109,7 @@ distances' g s =
                   ) ac neis
       ) initdists topsorted
 
+-- | Map from vertex to its distance (number of edges) from the source in a 'DAG'.
 type Distances = IM.IntMap Vertex
 
 -- | Ginen a DAG and a vertex you get the distances

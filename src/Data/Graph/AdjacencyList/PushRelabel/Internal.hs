@@ -38,7 +38,9 @@ module Data.Graph.AdjacencyList.PushRelabel.Internal
     -- * Residual graph types
   , ResidualGraph (..)
   , ResidualVertex (..)
+  , ResidualVertices
   , ResidualEdge (..)
+  , ResidualEdges
   , NeighborsMap
   , Overflowing (..)
     -- * Vertex property types
@@ -119,6 +121,7 @@ instance Show ResidualVertex where
       show h ++ " excess: " ++
       show (fromRational x :: Double)
 
+-- | Map from vertex id to its 'ResidualVertex' state.
 type ResidualVertices = IM.IntMap ResidualVertex
 
 -- | Per-edge state: original edge, capacity, and current flow (preflow).
@@ -135,6 +138,7 @@ instance Show ResidualEdge where
       show (fromRational c :: Double)
       ++  " " ++
       show (fromRational f :: Double)
+-- | Map from edge index to its 'ResidualEdge' state.
 type ResidualEdges = IM.IntMap ResidualEdge
 
 -- | For each vertex, maps forward neighbors and reverse neighbors

@@ -19,6 +19,7 @@ conversion between flat vertex IDs and Cartesian coordinates.
 module Data.Graph.AdjacencyList.Grid
     ( L
     , D
+    , CVertex
     , fromTuple
     , toTuple
     , adjacentEdges
@@ -48,7 +49,8 @@ type L = Natural
 -- | Dimensionality of the lattice (2 = square, 3 = cubic, etc.).
 type D = Natural
 
-type CVertex = [Vertex] -- ^ Representation of a Lattice Vertex as Cartesian graph product
+-- | Cartesian coordinates of a lattice vertex: a list of per-dimension indices.
+type CVertex = [Vertex]
 data CEdge = CEdge CVertex CVertex -- ^ Cartesian representation of a Lattice Vertex
 
 data Direction = Forward | Backward deriving (Eq, Ord, Show, Read, Bounded, Enum)
