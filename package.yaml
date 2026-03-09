@@ -20,18 +20,18 @@ category:            Graph theory
 description:         Please see the README on GitHub at <https://github.com/tpapak/algraph#readme>
 
 dependencies:
-- base >= 4.8
+- base >= 4.8 && < 4.21
 
 library:
   source-dirs: src
   dependencies:
-  - mtl >= 2.2.1
+  - mtl >= 2.2.1 && < 2.4
   #- natural-numbers 
-  - containers >= 0.8
-  - text >= 1.2.2.2
-  - Unique >= 0.4.7.9
-  - either-unwrap >= 1.1
-  - binary >= 0.8.6.0
+  - containers >= 0.5.10.2 && < 0.8
+  - text >= 1.2.2.2 && < 2.2
+  - Unique >= 0.4.7.9 && < 0.5
+  - either-unwrap >= 1.1 && < 1.2
+  - binary >= 0.8.6.0 && < 0.9
   #exposed-modules:     Data.Graph.AdjacencyList
                      #, Data.Graph.AdjacencyList.Grid
                      #, Data.Graph.AdjacencyList.Network
